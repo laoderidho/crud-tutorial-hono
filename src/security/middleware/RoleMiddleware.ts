@@ -4,6 +4,7 @@ import { decode } from "hono/jwt";
 
 const RoleMiddleware = (params: string) =>{
     return async (c: Context, next: Next) => {
+        // request token from header
        const token = c.req.header('Authorization')
 
          if(!token){
@@ -27,7 +28,7 @@ const RoleMiddleware = (params: string) =>{
                 if(payload.role !== params){
                     return c.json({
                         status: "error",
-                        message: "Role tidak sesuai"
+                        message: "Tidak memiliki akses"
                     }, 401)
                 }
 

@@ -4,6 +4,7 @@ import { verify } from "hono/jwt"
 
 
 const AuthMiddleware = async (c: Context, next: Next) => {
+    // request token from header
     const token = c.req.header('Authorization')
 
     if(!token){
