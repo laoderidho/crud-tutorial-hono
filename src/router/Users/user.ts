@@ -8,6 +8,13 @@ const user = new Hono()
 user.use(AuthMiddleware)
 user.use(RoleMiddleware("user"))
 
+user.get("/test", async (c) => {
+    return c.json({
+        status: "success",
+        message: "Test Success"
+    })
+})
+
 
 
 
