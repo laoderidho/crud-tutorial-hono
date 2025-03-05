@@ -6,6 +6,8 @@ import  { sign } from 'hono/jwt'
 import UserValidator from "../../validator/UserValidator";
 import LoginValidator from "../../validator/LoginValidator";
 import {ZodError} from 'zod'
+import { userId } from "../../config/general";
+import { secretAccessToken } from "../../config/jwtSecrect";
 
 class AuthController {
     async register(c: Context){
@@ -13,17 +15,18 @@ class AuthController {
             // user ini ada di interfaces User
             const user: User = await c.req.json();
 
-           UserValidator.parse(user);
+            UserValidator.parse(user);
 
+            const {email, name, password, no_telp} = user;
 
             const prisma = new PrismaClient();
             await  prisma.user.create({
                     data: {
-                        email: user.email,
-                        name: user.name,
-                        password: await Bun.password.hash(user.password),
-                        no_telp : user.no_telp,
-                        roleId : user.roleId
+                        email: email,
+                        name: name,
+                        password: await Bun.password.hash(password),
+                        no_telp : no_telp,
+                        roleId : userId
                     }
             })
 
@@ -63,9 +66,11 @@ class AuthController {
 
         LoginValidator.parse(user);
 
+        const {email, password} = user;
+
         const data = await prisma.user.findUnique({
             where: {
-                email: user.email
+                email: email
             }
         })
 
@@ -76,7 +81,7 @@ class AuthController {
             }, 400)
         }
 
-        const compare = await Bun.password.verify(user.password, data.password);
+        const compare = await Bun.password.verify(password, data.password);
 
         if(!compare ){
             return c.json({
@@ -91,9 +96,7 @@ class AuthController {
             exp: Math.floor(Date.now() / 1000) + 60 * 180
         }
 
-        const secret = "MySecretKey";
-
-        const token = await sign(payload, secret)
+        const token = await sign(payload, secretAccessToken)
 
         return c.json({
             status: "success",
