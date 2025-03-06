@@ -1,2 +1,2 @@
-export const adminId = 1;
-export const userId = 2;
+export const adminId: number = 1;
+export const userId: number = 2;

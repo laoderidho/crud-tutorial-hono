@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import BookController from "../../../controller/Admin/data/BookController"
+import BookController from "../../../controller/Admin/Book/BookController"
 const book = new Hono()
 
 const bookController = new BookController()

@@ -43,6 +43,22 @@ class BookController {
             }, 500)
         }
     }
+
+    async getBook(c: Context){
+        try {
+            const prisma = new PrismaClient();
+            const books = await prisma.book.findMany();
+            return c.json({
+                status: "success",
+                data: books
+            }, 200)
+        } catch (error: any) {
+            return c.json({
+                status: "error",
+                message: error.message
+            }, 500)
+        }
+    }
 }
 
 export default BookController;
