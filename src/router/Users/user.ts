@@ -15,8 +15,4 @@ user.get("/test", async (c) => {
     })
 })
 
-
-
-
-
 export default user;

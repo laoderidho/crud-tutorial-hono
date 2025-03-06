@@ -19,7 +19,6 @@ const maxError = {
   name: "Nama maksimal 255 karakter",
   password: "Password maksimal 255 karakter",
   no_telp: "No Telp maksimal 13 karakter"
-
 }
 
 const UserValidator = z.object({
@@ -28,8 +27,5 @@ const UserValidator = z.object({
   password: z.string({required_error: messageRequired.password}).min(8, {message: messageMinError.password}).max(255, {message: maxError.password}),
   no_telp: z.string({required_error: messageRequired.no_telp}).min(10, {message: messageMinError.no_telp}).max(13, {message: maxError.no_telp}),
 });
-
-
-
 
 export default UserValidator;

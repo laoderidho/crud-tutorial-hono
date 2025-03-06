@@ -1,6 +1,7 @@
 import { Context } from "hono"
 import { Next } from "hono"
 import { verify } from "hono/jwt"
+import { secretAccessToken } from "../../config/jwtSecrect"
 
 
 const AuthMiddleware = async (c: Context, next: Next) => {
@@ -16,7 +17,7 @@ const AuthMiddleware = async (c: Context, next: Next) => {
 
     // cek token
     try {
-        const data = await verify(token, "MySecretKey")
+        const data = await verify(token, secretAccessToken)
         if(!data){
             return c.json({
                 status: "error",

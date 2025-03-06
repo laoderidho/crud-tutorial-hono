@@ -40,18 +40,32 @@ model Book {
   id        Int   @id @default(autoincrement())
   title     String
   author    String
-  Borrowing Borrowing[]
+  description String
+  code String
+  publisher String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  Borrowing Borrowing[]
+}
+
+model BorrowStatus {
+  id Int @id @default(autoincrement())
+  name String 
+  borrow Borrowing[]
 }
 
 model Borrowing{
   id        Int   @id @default(autoincrement())
   bookId    Int
   userId    Int
+  BorrowDateFr DateTime 
+  BorrowDateTo DateTime
+  statusBorrowId Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   user      User  @relation(fields: [userId], references: [id])
   book      Book  @relation(fields: [bookId], references: [id])
+  borrowStatus BorrowStatus @relation(fields: [statusBorrowId], references: [id])
 }

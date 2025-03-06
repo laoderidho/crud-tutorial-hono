@@ -78,7 +78,7 @@ class AuthController {
             return c.json({
                 status: "error",
                 message: "Password atau email Salah"
-            }, 400)
+            }, 401)
         }
 
         const compare = await Bun.password.verify(password, data.password);
@@ -87,7 +87,7 @@ class AuthController {
             return c.json({
                 status: "error",
                 message: "Password atau email Salah"
-            }, 400)
+            }, 401)
         }
 
         const payload = {
