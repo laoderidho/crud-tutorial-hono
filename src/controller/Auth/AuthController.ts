@@ -17,7 +17,20 @@ class AuthController {
 
             UserValidator.parse(user);
 
-            const {email, name, password, no_telp} = user;
+            const {email, name, password, no_telp, country_id, address} = user;
+
+            const getIdCountry = await new PrismaClient().user.findUnique({
+                where: {
+                    country_id: country_id
+                }
+            });
+
+            if(getIdCountry){
+                return c.json({
+                    status: "error",
+                    message: "NIK sudah Tedaftar"
+                }, 400)
+            }
 
             const prisma = new PrismaClient();
             await  prisma.user.create({
@@ -26,7 +39,9 @@ class AuthController {
                         name: name,
                         password: await Bun.password.hash(password),
                         no_telp : no_telp,
-                        roleId : userId
+                        roleId : userId,
+                        country_id: country_id,
+                        address: address
                     }
             })
 

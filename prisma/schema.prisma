@@ -26,8 +26,11 @@ model User {
   id        Int   @id @default(autoincrement())
   email     String   @unique
   name      String?
+  address String
+  country_id String @unique
   password  String
   no_telp   String
+  isActive Boolean @default(true)
   Borrowing Borrowing[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -41,8 +44,9 @@ model Book {
   title     String
   author    String
   description String
-  code String
+  code String @unique
   publisher String
+  photo String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
