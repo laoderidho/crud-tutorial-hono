@@ -2,12 +2,13 @@ import { Context } from "hono";
 import User from "../../interfaces/User";
 import { Prisma, PrismaClient } from "@prisma/client";
 import Login from "../../interfaces/Login";
-import  { sign } from 'hono/jwt'
+import  { sign, verify } from 'hono/jwt'
 import UserValidator from "../../validator/UserValidator";
 import LoginValidator from "../../validator/LoginValidator";
-import {ZodError} from 'zod'
+import { ZodError } from 'zod'
 import { userId } from "../../config/general";
 import { secretAccessToken } from "../../config/jwtSecrect";
+import { setCookie, getCookie } from "hono/cookie";
 
 class AuthController {
     async register(c: Context){
@@ -75,49 +76,140 @@ class AuthController {
 
     async login(c: Context){
 
-        const user : Login = await c.req.json();
+        try {
+            const user : Login = await c.req.json();
 
-        const prisma = new PrismaClient();
+            const prisma = new PrismaClient();
 
-        LoginValidator.parse(user);
+            LoginValidator.parse(user);
 
-        const {email, password} = user;
+            const {email, password} = user;
 
-        const data = await prisma.user.findUnique({
-            where: {
-                email: email
+            const data = await prisma.user.findUnique({
+                where: {
+                    email: email
+                }
+            })
+
+            if(!data){
+                return c.json({
+                    status: "error",
+                    message: "Password atau email Salah"
+                }, 401)
             }
-        })
 
-        if(!data){
+            const compare = await Bun.password.verify(password, data.password);
+
+            if(!compare ){
+                return c.json({
+                    status: "error",
+                    message: "Password atau email Salah"
+                }, 401)
+            }
+
+            const payload = {
+                sub: data.id,
+                role: data.roleId,
+                exp: Math.floor(Date.now() / 1000) + 60 * 180
+            }
+
+            const refreshPayload = {
+                sub: data.id,
+                role: data.roleId,
+                exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7
+            };
+
+
+            const token = await sign(payload, secretAccessToken)
+            
+            const refreshToken = await sign(refreshPayload, secretAccessToken)
+
+            setCookie(c, 'refreshToken', refreshToken, {
+                maxAge: 60 * 60 * 24 * 7,
+                httpOnly: true,
+                sameSite: 'None'
+            })
+
+            return c.json({
+                status: "success",
+                message: "Berhasil Login",
+                token: token
+            }, 201)
+
+        } catch (error) {
+            if(error instanceof ZodError){
+                return c.json({
+                     status: "error",
+                     message: error.errors.map(err => err.message)
+                }, 400)
+            }
             return c.json({
                 status: "error",
-                message: "Password atau email Salah"
-            }, 401)
+                message: "Server Error"
+            }, 500) 
         }
 
-        const compare = await Bun.password.verify(password, data.password);
+        
+    }
 
-        if(!compare ){
+    async refreshToken(c: Context){
+        try {
+            const token = getCookie(c, 'refreshToken');
+
+            if(!token){
+                return c.json({
+                    status: "error",
+                    message: "Token tidak ditemukan"
+                }, 401)
+            }
+
+            const dataJwt = await verify(token, secretAccessToken);
+
+            const {sub, role} = dataJwt;
+
+            const id = Number(sub);
+            const roleId = Number(role);
+
+            if(!dataJwt){
+                return c.json({
+                    status: "error",
+                    message: "Token tidak valid"
+                }, 401)
+            }
+
+            const prisma = new PrismaClient();
+
+            const data = await prisma.user.findUnique({
+                where: {
+                    id: id,
+                    roleId: roleId
+                }
+            })
+
+            if(!data){
+                return c.json({
+                    status: "error",
+                    message: "data tidak ada"
+                }, 401)
+            }   
+
+            const payload = {
+                sub: dataJwt.sub,
+                role: dataJwt.role,
+                exp: Math.floor(Date.now() / 1000) + 60 * 180
+            }
+
+            const newToken = await sign(payload, secretAccessToken);
+
+            return c.json({
+                token: newToken
+            }, 201)
+        } catch (error) {
             return c.json({
                 status: "error",
-                message: "Password atau email Salah"
+                message: "Token tidak valid"
             }, 401)
         }
-
-        const payload = {
-            sub: data.id,
-            role: data.roleId === 1 ? "admin" : "user",
-            exp: Math.floor(Date.now() / 1000) + 60 * 180
-        }
-
-        const token = await sign(payload, secretAccessToken)
-
-        return c.json({
-            status: "success",
-            message: "Berhasil Login",
-            token: token
-        }, 201)
     }
 }
 

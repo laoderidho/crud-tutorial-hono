@@ -7,5 +7,6 @@ const authController = new AuthController();
 
 auth.post('/register', authController.register)
 auth.post('/login', authController.login)
+auth.post('/refresh-token', authController.refreshToken)
 
 export default auth

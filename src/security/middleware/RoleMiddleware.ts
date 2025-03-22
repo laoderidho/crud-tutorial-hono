@@ -2,7 +2,7 @@ import { Context } from "hono";
 import { Next } from "hono";
 import { decode } from "hono/jwt";
 
-const RoleMiddleware = (params: string) =>{
+const RoleMiddleware = (params: number) =>{
     return async (c: Context, next: Next) => {
         // request token from header
        const token = c.req.header('Authorization')
