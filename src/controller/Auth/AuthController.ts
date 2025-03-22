@@ -75,14 +75,13 @@ class AuthController {
     }
 
     async login(c: Context){
-
         try {
             const user : Login = await c.req.json();
 
             const prisma = new PrismaClient();
 
             LoginValidator.parse(user);
-
+            
             const {email, password} = user;
 
             const data = await prisma.user.findUnique({
@@ -143,6 +142,11 @@ class AuthController {
                      message: error.errors.map(err => err.message)
                 }, 400)
             }
+
+             if(error instanceof Prisma.PrismaClientKnownRequestError){
+               return error
+           }
+
             return c.json({
                 status: "error",
                 message: "Server Error"

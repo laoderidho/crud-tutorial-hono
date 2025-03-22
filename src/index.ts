@@ -9,6 +9,8 @@ app.use("/api/*", cors({
     credentials: true
 }))
 
+console.log(process.env.HOSST_FRONT_END)
+
 app.route("/api", routes)
 
 export default app
