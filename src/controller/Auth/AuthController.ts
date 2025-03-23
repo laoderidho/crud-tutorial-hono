@@ -80,7 +80,21 @@ class AuthController {
 
             const prisma = new PrismaClient();
 
-            LoginValidator.parse(user);
+            const parserValidator = LoginValidator.safeParse(user);
+
+            if(!parserValidator.success){
+                const errorMessages: Record<string, string> = parserValidator.error.errors.reduce((acc, err) => {
+                    acc[err.path[0]] = err.message; 
+                    return acc;
+                }, {} as Record<string, string>);
+
+                return c.json({
+                    status: "error",
+                    message: errorMessages
+                },
+                400)
+
+            }
             
             const {email, password} = user;
 
@@ -136,16 +150,9 @@ class AuthController {
             }, 201)
 
         } catch (error) {
-            if(error instanceof ZodError){
-                return c.json({
-                     status: "error",
-                     message: error.errors.map(err => err.message)
-                }, 400)
-            }
-
-             if(error instanceof Prisma.PrismaClientKnownRequestError){
+            if(error instanceof Prisma.PrismaClientKnownRequestError){
                return error
-           }
+            }
 
             return c.json({
                 status: "error",
