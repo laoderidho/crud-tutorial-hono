@@ -16,8 +16,21 @@ class AuthController {
             // user ini ada di interfaces User
             const user: User = await c.req.json();
 
-            UserValidator.parse(user);
+            const parserValidator = UserValidator.safeParse(user);
 
+            if(!parserValidator.success){
+                const errorMessages: Record<string, string> = parserValidator.error.errors.reduce((acc, err) => {
+                    acc[err.path[0]] = err.message; 
+                    return acc;
+                }, {} as Record<string, string>);
+
+                return c.json({
+                    status: "error",
+                    message: errorMessages
+                },
+                400)
+            }
+            
             const {email, name, password, no_telp, country_id, address} = user;
 
             const getIdCountry = await new PrismaClient().user.findUnique({
@@ -93,7 +106,6 @@ class AuthController {
                     message: errorMessages
                 },
                 400)
-
             }
             
             const {email, password} = user;
@@ -146,7 +158,8 @@ class AuthController {
             return c.json({
                 status: "success",
                 message: "Berhasil Login",
-                token: token
+                token: token,
+                role: data.roleId
             }, 201)
 
         } catch (error) {

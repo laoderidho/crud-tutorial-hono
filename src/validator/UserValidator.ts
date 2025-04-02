@@ -31,7 +31,11 @@ const UserValidator = z.object({
   password: z.string({required_error: messageRequired.password}).min(8, {message: messageMinError.password}).max(255, {message: maxError.password}),
   no_telp: z.string({required_error: messageRequired.no_telp}).min(10, {message: messageMinError.no_telp}).max(13, {message: maxError.no_telp}),
   address: z.string({required_error: messageRequired.address}).max(1000, {message: maxError.address}),
-  country_id: z.string({required_error: messageRequired.country_id}).min(16, {message: messageMinError.country_id})
+  country_id: z.string({required_error: messageRequired.country_id}).min(16, {message: messageMinError.country_id}),
+  confirmPassword: z.string().min(8, {message: messageMinError.password}).max(255, {message: maxError.password})
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Password harus sama dengan Konfirmasi Password",
+  path: ["confirmPassword"],
 });
 
 export default UserValidator;

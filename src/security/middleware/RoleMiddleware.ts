@@ -29,7 +29,7 @@ const RoleMiddleware = (params: number) =>{
                     return c.json({
                         status: "error",
                         message: "Tidak memiliki akses"
-                    }, 401)
+                    }, 403)
                 }
 
                 await next()
