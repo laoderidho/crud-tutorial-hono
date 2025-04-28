@@ -38,8 +38,7 @@ class BookController {
             }
             
             return c.json({
-                status: "error",
-                message: error.message
+                status: "error"
             }, 500)
         }
     }

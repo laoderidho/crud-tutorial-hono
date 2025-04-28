@@ -17,7 +17,6 @@ const RoleMiddleware = (params: number) =>{
             // cek token
             try {
                 const {payload} = await decode(token)
-
                 if(!payload){
                     return c.json({
                         status: "error",
