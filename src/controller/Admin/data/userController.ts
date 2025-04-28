@@ -1,6 +1,6 @@
 import { Context } from "hono";
 import { PrismaClient } from "@prisma/client";
-import { getdataUser } from "../../../query/Admin/data/dataQuery";
+import { getdataUser, getDataRole } from "../../../query/Admin/data/dataQuery";
 import IRole from '../../../interfaces/Admin/Data/Role'
 import VRole from '../../../validator/Admin/Data/Role'
 import { ZodError } from "zod";
@@ -104,6 +104,24 @@ export default class userController {
             return c.json({
                 status: "error",
                 message: error.message
+            }, 500)
+        }
+    }
+
+    async getRole(c: Context){
+        try {
+            
+            const prisma = new PrismaClient()
+
+            const getData = await prisma.$queryRawUnsafe(getDataRole())
+
+            return c.json({
+                status: "success",
+                data: getData
+            }, 200)
+        } catch (error) {
+            return c.json({
+
             }, 500)
         }
     }
