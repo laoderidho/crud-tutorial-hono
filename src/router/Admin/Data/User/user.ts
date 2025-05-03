@@ -9,6 +9,7 @@ user.post('/change-role', UserController.changeRole)
 user.get('/get-user', UserController.getData)
 user.get('/get-user/:id', UserController.getDataById)
 user.get('/get-role', UserController.getRole)
+user.post('/get-user-by-keyword', UserController.searchUser)
 
 export default user
 

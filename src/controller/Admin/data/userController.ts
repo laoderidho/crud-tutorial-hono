@@ -1,8 +1,9 @@
 import { Context } from "hono";
 import { PrismaClient } from "@prisma/client";
-import { getdataUser, getDataRole } from "../../../query/Admin/data/dataQuery";
+import { getdataUser, getDataRole, getDataByKeyword } from "../../../query/Admin/data/dataQuery";
 import IRole from '../../../interfaces/Admin/Data/Role'
 import VRole from '../../../validator/Admin/Data/Role'
+import IKeywordUser from "../../../interfaces/Admin/Data/KeywoardUser";
 import { ZodError } from "zod";
 import { decode } from "hono/jwt";
 
@@ -49,7 +50,7 @@ export default class userController {
 
             const prisma = new PrismaClient()
 
-            await prisma.user.update({
+            const data = await prisma.user.update({
                 where: {
                     id: id
                 },
@@ -57,7 +58,6 @@ export default class userController {
                     roleId: roleId
                 }
             })
-
             return c.json({
                 status: "success",
                 message: "berhasil diubah"
@@ -122,6 +122,30 @@ export default class userController {
         } catch (error) {
             return c.json({
 
+            }, 500)
+        }
+    }
+
+    async searchUser(c: Context){
+        try {
+           
+            const data : IKeywordUser = await c.req.json()
+
+            const {keyword} = data
+          
+            const prisma = new PrismaClient()
+
+            const getData = await prisma.$queryRawUnsafe(getDataByKeyword(keyword))
+
+            return c.json({
+                status: "success",
+                data: getData
+            }, 200)
+
+        } catch (error: any) {
+            return c.json({
+                status: "error",
+                message: error.message
             }, 500)
         }
     }

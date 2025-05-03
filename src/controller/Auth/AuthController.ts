@@ -42,7 +42,9 @@ class AuthController {
             if(getIdCountry){
                 return c.json({
                     status: "error",
-                    message: "NIK sudah Tedaftar"
+                    message: {
+                        "country_id": "ktp tidak Valid"
+                    }
                 }, 400)
             }
 
