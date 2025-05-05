@@ -3,6 +3,6 @@ export default interface BookInterface{
     title: string;
     author: string;
     description: string;
-    code: string;
     publisher : string;
+    photo: string;
 }

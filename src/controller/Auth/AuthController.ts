@@ -1,6 +1,6 @@
 import { Context } from "hono";
 import User from "../../interfaces/User";
-import { Prisma, PrismaClient } from "@prisma/client";
+import { prisma } from "../../utils/db";
 import Login from "../../interfaces/Login";
 import  { sign, verify } from 'hono/jwt'
 import UserValidator from "../../validator/UserValidator";
@@ -33,9 +33,15 @@ class AuthController {
             
             const {email, name, password, no_telp, country_id, address} = user;
 
-            const getIdCountry = await new PrismaClient().user.findUnique({
+            const getIdCountry = await prisma.user.findUnique({
                 where: {
                     country_id: country_id
+                }
+            });
+
+            const getEmail = await prisma.user.findUnique({
+                where: {
+                    email: email
                 }
             });
 
@@ -48,7 +54,15 @@ class AuthController {
                 }, 400)
             }
 
-            const prisma = new PrismaClient();
+            if(getEmail){
+                return c.json({
+                    status: "error",
+                    message: {
+                        "email": "email sudah terdaftar"
+                    }
+                }, 400)
+            }
+
             await  prisma.user.create({
                     data: {
                         email: email,
@@ -73,15 +87,7 @@ class AuthController {
                      message: error.errors.map(err => err.message)
                 }, 400)
            } 
-           if(error instanceof Prisma.PrismaClientKnownRequestError){
-               if(error.code === 'P2002'){
-                   return c.json({
-                       status: "error",
-                       message: "Email sudah terdaftar"
-                   }, 400)
-               }
-           }
-
+           
             return c.json({
                 status: "error",
                 message: "Server Error"
@@ -92,8 +98,6 @@ class AuthController {
     async login(c: Context){
         try {
             const user : Login = await c.req.json();
-
-            const prisma = new PrismaClient();
 
             const parserValidator = LoginValidator.safeParse(user);
 
@@ -165,17 +169,12 @@ class AuthController {
             }, 201)
 
         } catch (error) {
-            if(error instanceof Prisma.PrismaClientKnownRequestError){
-               return error
-            }
-
+           
             return c.json({
                 status: "error",
                 message: "Server Error"
             }, 500) 
         }
-
-        
     }
 
     async refreshToken(c: Context){
@@ -202,8 +201,6 @@ class AuthController {
                     message: "Token tidak valid"
                 }, 401)
             }
-
-            const prisma = new PrismaClient();
 
             const data = await prisma.user.findUnique({
                 where: {

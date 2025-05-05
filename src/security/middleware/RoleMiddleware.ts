@@ -1,6 +1,7 @@
 import { Context } from "hono";
 import { Next } from "hono";
 import { decode } from "hono/jwt";
+import { prisma } from "../../utils/db";
 
 const RoleMiddleware = (params: number) =>{
     return async (c: Context, next: Next) => {
@@ -17,21 +18,32 @@ const RoleMiddleware = (params: number) =>{
             // cek token
             try {
                 const {payload} = await decode(token)
+               
                 if(!payload){
                     return c.json({
                         status: "error",
                         message: "Token tidak valid"
                     }, 401)
                 }
+                const {sub} = payload
+                const id = Number(sub)
+                const getRole = await prisma.user.findUnique({
+                    where: {
+                        id: id
+                    },
+                    select: {
+                        roleId: true
+                    }
+                })
 
-                if(payload.role !== params){
+                if(getRole?.roleId !== params){
                     return c.json({
                         status: "error",
-                        message: "Tidak memiliki akses"
+                        message: "Akses ditolak"
                     }, 403)
                 }
-
-                await next()
+               
+               return await next()
             } catch (error: any) {
                 return c.json({
                     status: "error",

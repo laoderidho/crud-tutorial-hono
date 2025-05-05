@@ -1,26 +1,41 @@
 import { Context } from "hono";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../../../utils/db";
 import  BookInterface  from "../../../interfaces/Book"
 import { ZodError } from "zod";
 import BookValidator from "../../../validator/BookValidator";
+import IKeywordUser from "../../../interfaces/Admin/Data/KeywoardUser";
+import { searchBook } from "../../../query/Admin/book/bookQuery";
 
 class BookController {
     async addBook(c: Context){
         try {
             const book : BookInterface = await c.req.json();
 
-            BookValidator.parse(book);
+             const parserValidator = BookValidator.safeParse(book);
 
-            const {title, author, description, code, publisher} = book;
+            const {title, author, description, publisher, photo} = book;
 
-            const prisma = new PrismaClient();
+           
+            if(!parserValidator.success){
+                const errorMessages: Record<string, string> = parserValidator.error.errors.reduce((acc, err) => {
+                    acc[err.path[0]] = err.message; 
+                    return acc;
+                }, {} as Record<string, string>);
+
+                return c.json({
+                    status: "error",
+                    message: errorMessages
+                },
+                400)
+            }
+
             await prisma.book.create({
                 data: {
                     title: title,
                     author: author,
                     description: description,
-                    code: code,
-                    publisher: publisher
+                    publisher: publisher,
+                    photo: photo
                 }
             })
 
@@ -38,19 +53,21 @@ class BookController {
             }
             
             return c.json({
-                status: "error"
+                status: "error",
+                message: error.message
             }, 500)
         }
     }
 
     async getBook(c: Context){
         try {
-            const prisma = new PrismaClient();
+           
             const books = await prisma.book.findMany({
                 select: {
                     id: true,
                     title: true,
                     author: true,
+                    photo: true,
                 }
             });
             return c.json({
@@ -69,8 +86,7 @@ class BookController {
         try {
 
             const { id } = c.req.param();
-            const prisma = new PrismaClient();
-
+           
             const book = await prisma.book.findUnique({
                 where: {
                     id: parseInt(id)
@@ -80,7 +96,6 @@ class BookController {
                     title: true,
                     author: true,
                     description: true,
-                    code: true,
                     publisher: true
                 }
             })
@@ -110,11 +125,22 @@ class BookController {
             const { id } = c.req.param();
             const book : BookInterface = await c.req.json();
 
-            BookValidator.parse(book);
+             const parserValidator = BookValidator.safeParse(book);
 
-            const {title, author, description, code, publisher} = book;
+            const {title, author, description, publisher, photo} = book;
 
-            const prisma = new PrismaClient();
+            if(!parserValidator.success){
+                const errorMessages: Record<string, string> = parserValidator.error.errors.reduce((acc, err) => {
+                    acc[err.path[0]] = err.message; 
+                    return acc;
+                }, {} as Record<string, string>);
+
+                return c.json({
+                    status: "error",
+                    message: errorMessages
+                },
+                400)
+            }
 
             const bookData = await prisma.book.findUnique({
                 where: {
@@ -137,10 +163,15 @@ class BookController {
                     title: title,
                     author: author,
                     description: description,
-                    code: code,
-                    publisher: publisher
+                    publisher: publisher,
+                    photo: photo
                 }
             })
+
+           return c.json({
+                status: "success",
+                message: "Buku berhasil diupdate"
+            },200)
 
         }catch (error: any) {
             if(error instanceof ZodError){
@@ -150,6 +181,28 @@ class BookController {
                 }, 400)
             }
             
+            return c.json({
+                status: "error",
+                message: error.message
+            }, 500)
+        }
+    }
+
+    async searchBook(c: Context){
+        try {
+            const data : IKeywordUser = await c.req.json()
+            console.log(data)
+           
+            const {keyword} = data
+            
+            const getData = await prisma.$queryRawUnsafe(searchBook(keyword))
+
+            return c.json({
+                status: "success",
+                data: getData
+            }, 200)
+        
+        } catch (error: any) {
             return c.json({
                 status: "error",
                 message: error.message

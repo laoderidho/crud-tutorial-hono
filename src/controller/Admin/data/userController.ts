@@ -1,5 +1,5 @@
 import { Context } from "hono";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../../../utils/db";
 import { getdataUser, getDataRole, getDataByKeyword } from "../../../query/Admin/data/dataQuery";
 import IRole from '../../../interfaces/Admin/Data/Role'
 import VRole from '../../../validator/Admin/Data/Role'
@@ -24,8 +24,6 @@ export default class userController {
 
             const idUser = Number(payload.sub)
 
-            const prisma = new PrismaClient()
-
             const getData = await prisma.$queryRawUnsafe(getdataUser(idUser))
 
             return c.json({
@@ -48,9 +46,7 @@ export default class userController {
 
             const {id, roleId} = role
 
-            const prisma = new PrismaClient()
-
-            const data = await prisma.user.update({
+            await prisma.user.update({
                 where: {
                     id: id
                 },
@@ -81,8 +77,6 @@ export default class userController {
         try {
             const { id } = c.req.param()
             
-            const prisma = new PrismaClient()
-
             const getData = await prisma.user.findUnique({
                 where: {
                     id: parseInt(id),
@@ -111,8 +105,6 @@ export default class userController {
     async getRole(c: Context){
         try {
             
-            const prisma = new PrismaClient()
-
             const getData = await prisma.$queryRawUnsafe(getDataRole())
 
             return c.json({
@@ -133,8 +125,6 @@ export default class userController {
 
             const {keyword} = data
           
-            const prisma = new PrismaClient()
-
             const getData = await prisma.$queryRawUnsafe(getDataByKeyword(keyword))
 
             return c.json({
