@@ -191,7 +191,6 @@ class BookController {
     async searchBook(c: Context){
         try {
             const data : IKeywordUser = await c.req.json()
-            console.log(data)
            
             const {keyword} = data
             
