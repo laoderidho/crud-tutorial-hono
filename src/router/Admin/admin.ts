@@ -3,6 +3,7 @@ import AuthMiddleware from "../../security/middleware/AuthMiddleware";
 import RoleMiddleware from "../../security/middleware/RoleMiddleware";
 import book from "./Book/book";
 import data from "./Data/data";
+import borrow from "./Borrow/borrow";
 import { adminId } from "../../config/general";
 const admin = new Hono()
 
@@ -18,5 +19,6 @@ admin.get("/test", async (c) => {
 
 admin.route("/book", book)
 admin.route("/data", data)
+admin.route("/borrow", borrow)
 
 export default admin;

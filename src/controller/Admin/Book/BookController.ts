@@ -96,7 +96,8 @@ class BookController {
                     title: true,
                     author: true,
                     description: true,
-                    publisher: true
+                    publisher: true,
+                    photo: true
                 }
             })
 
@@ -201,6 +202,42 @@ class BookController {
                 data: getData
             }, 200)
         
+        } catch (error: any) {
+            return c.json({
+                status: "error",
+                message: error.message
+            }, 500)
+        }
+    }
+
+    async deleteBook(c: Context){
+        try {
+            const { id } = c.req.param();
+
+            const bookData = await prisma.book.findUnique({
+                where: {
+                    id: parseInt(id)
+                }
+            })
+
+            if(!bookData){
+                return c.json({
+                    status: "error",
+                    message: "Buku tidak ditemukan"
+                }, 404)
+            }
+
+            await prisma.book.delete({
+                where: {
+                    id: parseInt(id)
+                }
+            })
+
+           return c.json({
+                status: "success",
+                message: "Buku berhasil dihapus"
+            },200)
+
         } catch (error: any) {
             return c.json({
                 status: "error",

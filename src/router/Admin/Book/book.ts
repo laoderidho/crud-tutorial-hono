@@ -9,4 +9,5 @@ book.get("/get-book", bookController.getBook)
 book.get("/get-book/:id", bookController.getBookById)
 book.post("/update-book/:id", bookController.updateBook)
 book.post("/search-book", bookController.searchBook)
+book.delete("/delete/:id", bookController.deleteBook)
 export default book;
