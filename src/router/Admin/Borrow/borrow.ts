@@ -7,5 +7,6 @@ const borrowController = new BorrowController();
 borrow.post("/borrow-book", borrowController.borrowBook);
 borrow.get("/borrow-data", borrowController.borrowData);
 borrow.post("/search", borrowController.searchBorrow)
+borrow.post("/aproval", borrowController.aprovalBorrow)
 
 export default borrow;

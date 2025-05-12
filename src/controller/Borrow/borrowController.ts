@@ -3,7 +3,7 @@ import { prisma } from "../../utils/db";
 import Iborrow from "../../interfaces/Borrow";
 import { secretAccessToken } from "../../config/jwtSecrect";
 import { verify } from "hono/jwt";
-import { statusBorrow, statusReturn } from "../../config/general"; 
+import { statusBorrow, statusNeedAproval, statusReturn, userId } from "../../config/general"; 
 import { getBorrowData, lastBorrow, searchBorrowData } from "../../query/Borrow/borrowquery";
 import ISearchBorrow from "../../interfaces/SearchBorrow";
 
@@ -16,25 +16,49 @@ class BorrowController {
 
             let { dateToNumber, idBook, idUser } = borrow;
 
+            // auth verify
+            if (!token) {
+                throw new Error("Authorization token is missing");
+            }
+            const data = await verify(token, secretAccessToken);
+            const { sub, role } = data;
+
             if(idUser === undefined) {
-                if (!token) {
-                    throw new Error("Authorization token is missing");
-                }
-                const data = await verify(token, secretAccessToken);
-                const { sub } = data;
                 idUser = Number(sub);
             }
 
             const dateReturn = new Date();
             dateReturn.setDate(dateReturn.getDate() + dateToNumber);
 
+            let borrowStatus: number = statusBorrow
+
+            if(role === userId){
+                const count = await prisma.borrowing.count({
+                    where:{
+                        userId: Number(sub),
+                        statusBorrowId: {
+                            in: [statusBorrow, statusNeedAproval]
+                        }
+                    }
+                })
+
+                if(count!==0){
+                    return c.json({
+                        status: 'error', 
+                        message: "Anda Hanya Boleh Meminjam 1 buku Harus ke Admin untuk meminjam lebih dari 1 buku"
+                    }, 400)
+                }
+
+                borrowStatus = statusNeedAproval
+            }
+            
             await prisma.borrowing.create({
                 data: {
                     bookId: idBook,
                     userId: idUser,
                     BorrowDateFr: new Date(Date.now()),
                     BorrowDateTo: dateReturn,
-                    statusBorrowId: statusBorrow, 
+                    statusBorrowId: borrowStatus, 
                 }
             });
 
@@ -107,6 +131,35 @@ class BorrowController {
         } catch (error) {
             return c.json({
                 status: "error"
+            }, 500)
+        }
+    }
+
+    async aprovalBorrow(c: Context){
+        try {
+            const req = await c.req.json()
+
+            const {borrowId} = req
+
+            await prisma.borrowing.update({
+                where: {
+                    id: Number(borrowId)
+                }, 
+                data: {
+                    statusBorrowId: statusBorrow
+                }
+            })
+
+            return c.json({
+                status: "success",
+                message: "buku telah disetujui untuk dipinjam"
+            }, 200)
+            
+
+        } catch (error: any) {
+            return c.json({
+              status: "error",
+              message: error 
             }, 500)
         }
     }

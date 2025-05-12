@@ -2,7 +2,7 @@ export function getBorrowData(){
     return `select brs.id as borrowId, b.title, b.id as bookId, u.name, u.id as userId, brs.name as statusBorrowName, 
             br.BorrowDateFr, br.BorrowDateTo from book b join borrowing br on b.id  = br.bookId join 
             user u on u.id = br.userId join borrowstatus as brs on brs.id = br.statusBorrowId 
-            where br.statusBorrowId = 1`
+            where br.statusBorrowId in(1,3)`
 }
 
 export function lastBorrow(id: number){
